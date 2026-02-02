@@ -1,37 +1,37 @@
 #!/bin/bash
-# Авто-установщик и апдейтер от delevoper-only
-
+# Финальный и стабильный установщик
 PROJECT_DIR="$HOME/tg_tool"
 
-echo -e "\033[0;36m[+] Проверка папок проекта...\033[0m"
+echo -e "\033[0;36m[+] Подготовка окружения...\033[0m"
 
-# Создаем структуру, если её нет
+# Уходим в корень, чтобы не было ошибок с путями
+cd $HOME
+
+# Создаем структуру заново для чистоты
+rm -rf "$PROJECT_DIR"
 mkdir -p "$PROJECT_DIR/pyarmor_runtime_000000/android_aarch64"
 cd "$PROJECT_DIR"
 
-echo -e "\033[0;33m[*] Загрузка актуальных компонентов...\033[0m"
+echo -e "\033[0;33m[*] Загрузка компонентов с GitHub...\033[0m"
 
-# Скачиваем файлы (используем флаг -O чтобы точно перезаписать старые)
+# 1. Основной скрипт
 wget -q -O main.py "https://raw.githubusercontent.com/delevoper-only/tg_soft/main/main.py"
+
+# 2. Файлы рантайма (защиты)
 wget -q -O pyarmor_runtime_000000/__init__.py "https://raw.githubusercontent.com/delevoper-only/tg_soft/main/pyarmor_runtime_000000/__init__.py"
 wget -q -O pyarmor_runtime_000000/android_aarch64/pyarmor_runtime.so "https://raw.githubusercontent.com/delevoper-only/tg_soft/main/pyarmor_runtime_000000/android_aarch64/pyarmor_runtime.so"
 
-# Проверка библиотек (Python и Telethon)
-if ! command -v python &> /dev/null; then
-    echo -e "\033[0;33m[*] Установка Python...\033[0m"
-    pkg update -y && pkg install python -y
-fi
-
-echo -e "\033[0;33m[*] Проверка библиотек Python...\033[0m"
+# 3. Библиотеки
+echo -e "\033[0;33m[*] Проверка зависимостей...\033[0m"
 pip install --upgrade telethon requests &> /dev/null
 
-# Настройка конфига (только если его нет)
+# 4. Конфиг
 if [ ! -f "config.ini" ]; then
-    echo -e "\033[0;36m[?] Первая настройка. Введите данные с my.telegram.org:\033[0m"
-    read -p "API ID: " aid
-    read -p "API HASH: " ahash
-    echo -e "[Telegram]\napi_id = $aid\napi_hash = $ahash\n[Settings]\ndelay_min = 30\ndelay_max = 60" > config.ini
+    echo -e "[Telegram]\napi_id = 28655879\napi_hash = 3ea8adc73d99ba0018e7c42b6be359c9" > config.ini
 fi
+
+echo -e "\033[0;32m[!] Всё готово. Запускаем! \033[0m"
+python main.py
 
 echo -e "\033[0;32m[!] Готово! Для запуска введи:\033[0m"
 echo -e "\033[1;33mcd ~/tg_tool && python main.py\033[0m"
