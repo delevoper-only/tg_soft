@@ -1,53 +1,37 @@
-# Pyarmor 9.2.3 (trial), 000000, 2026-02-02T13:07:50.320620
-def __pyarmor__():
-    import platform
-    import sys
-    from struct import calcsize
+#!/bin/bash
+# Авто-установщик и апдейтер от delevoper-only
 
-    def format_system():
-        plat = platform.system().lower()
-        plat = ('cygwin' if plat.startswith('cygwin') else
-                'linux' if plat.startswith('linux') else
-                'freebsd' if plat.startswith(
-                    ('freebsd', 'openbsd', 'isilon onefs')) else plat)
-        if plat == 'linux':
-            if hasattr(sys, 'getandroidapilevel'):
-                plat = 'android'
-            else:
-                cname, cver = platform.libc_ver()
-                if cname == 'musl':
-                    plat = 'alpine'
-                elif cname == 'libc':
-                    plat = 'android'
-        return plat
+PROJECT_DIR="$HOME/tg_tool"
 
-    def format_machine():
-        mach = platform.machine().lower()
-        arch_table = (
-            ('x86', ('i386', 'i486', 'i586', 'i686', 'x86')),
-            ('x86_64', ('x64', 'x86_64', 'amd64', 'intel')),
-            ('arm', ('armv5',)),
-            ('armv6', ('armv6l',)),
-            ('armv7', ('armv7l',)),
-            ('aarch32', ('aarch32',)),
-            ('aarch64', ('aarch64', 'arm64')),
-            ('ppc64le', ('ppc64le',)),
-            ('mips32el', ('mipsel', 'mips32el')),
-            ('mips64el', ('mips64el',)),
-            ('riscv64', ('riscv64',)),
-        )
-        for alias, archlist in arch_table:
-            if mach in archlist:
-                mach = alias
-                break
-        return mach
+echo -e "\033[0;36m[+] Проверка папок проекта...\033[0m"
 
-    plat, mach = format_system(), format_machine()
-    if plat == 'windows' and mach == 'x86_64':
-        bitness = calcsize('P'.encode()) * 8
-        if bitness == 32:
-            mach = 'x86'
-    # mach = 'universal' if plat == 'darwin' else mach
-    name = '.'.join(['_'.join([plat, mach]), 'pyarmor_runtime'])
-    return __import__(name, globals(), locals(), ['__pyarmor__'], level=1)
-__pyarmor__ = __pyarmor__().__pyarmor__
+# Создаем структуру, если её нет
+mkdir -p "$PROJECT_DIR/pyarmor_runtime_000000/android_aarch64"
+cd "$PROJECT_DIR"
+
+echo -e "\033[0;33m[*] Загрузка актуальных компонентов...\033[0m"
+
+# Скачиваем файлы (используем флаг -O чтобы точно перезаписать старые)
+wget -q -O main.py "https://raw.githubusercontent.com/delevoper-only/tg_soft/main/main.py"
+wget -q -O pyarmor_runtime_000000/__init__.py "https://raw.githubusercontent.com/delevoper-only/tg_soft/main/pyarmor_runtime_000000/__init__.py"
+wget -q -O pyarmor_runtime_000000/android_aarch64/pyarmor_runtime.so "https://raw.githubusercontent.com/delevoper-only/tg_soft/main/pyarmor_runtime_000000/android_aarch64/pyarmor_runtime.so"
+
+# Проверка библиотек (Python и Telethon)
+if ! command -v python &> /dev/null; then
+    echo -e "\033[0;33m[*] Установка Python...\033[0m"
+    pkg update -y && pkg install python -y
+fi
+
+echo -e "\033[0;33m[*] Проверка библиотек Python...\033[0m"
+pip install --upgrade telethon requests &> /dev/null
+
+# Настройка конфига (только если его нет)
+if [ ! -f "config.ini" ]; then
+    echo -e "\033[0;36m[?] Первая настройка. Введите данные с my.telegram.org:\033[0m"
+    read -p "API ID: " aid
+    read -p "API HASH: " ahash
+    echo -e "[Telegram]\napi_id = $aid\napi_hash = $ahash\n[Settings]\ndelay_min = 30\ndelay_max = 60" > config.ini
+fi
+
+echo -e "\033[0;32m[!] Готово! Для запуска введи:\033[0m"
+echo -e "\033[1;33mcd ~/tg_tool && python main.py\033[0m"
