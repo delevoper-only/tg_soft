@@ -1,1 +1,1 @@
-from .__pyarmor__ import __pyarmor__
+from .android_aarch64 import pyarmor_runtime as __pyarmor__
